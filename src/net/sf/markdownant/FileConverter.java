@@ -8,6 +8,12 @@ import java.io.*;
 /**
  * Instances of this class is responsible for converting single Markdown files to HTML files. The actual conversion
  * is handled by Pete Bevins MarkdownProcessor.
+ *
+ * This class was originally in this project:
+ *
+ * http://sourceforge.net/p/markdown-ant
+ *
+ * written by Marcus Ahnve  (http://sourceforge.net/users/ahnve)
  */
 public class FileConverter {
 
