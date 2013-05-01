@@ -51,7 +51,7 @@ public class FileConverter {
     private String convertToString(File inputFile) {
         String s = readFile(inputFile);
         if (convertGollumLinks)
-            s = s.replaceAll("\\[\\[(.*)\\|(.*)\\]\\]", "[$1]($2)");
+            s = s.replaceAll("\\[\\[(.*?)\\|(.*?)\\]\\]", "[$1]($2)");
         return markdownProcessor.markdown(s);
     }
 
