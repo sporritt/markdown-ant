@@ -19,10 +19,21 @@ public class FileConverter {
 
     private MarkdownProcessor markdownProcessor;
     private String outputExtension;
+    private String template;
+    private boolean convertGollumLinks = true;
 
     public FileConverter(String outputExtension) {
+        this(outputExtension, null);
+    }
+
+    public FileConverter(String outputExtension, String template) {
         this.outputExtension = outputExtension;
+        this.template = template;
         markdownProcessor = new MarkdownProcessor();
+    }
+
+    public void setConvertGollumLinks(boolean c) {
+        convertGollumLinks = c;
     }
 
     /**
@@ -33,40 +44,59 @@ public class FileConverter {
     public void convert(File inputFile, File outputDir) {        
         handleNulls(inputFile, outputDir);
         checkOutputDir(outputDir);        
-        writeContentToFile(convertToString(inputFile), new File(outputDir, getOutputFileName(inputFile)));
+        String[] outputFileName = getOutputFileName(inputFile);
+        writeContentToFile(convertToString(inputFile), outputDir, outputFileName);
     }
 
     private String convertToString(File inputFile) {
-        return markdownProcessor.markdown(readFile(inputFile));
+        String s = readFile(inputFile);
+        if (convertGollumLinks)
+            s = s.replaceAll("\\[\\[(.*)\\|(.*)\\]\\]", "[$1]($2)");
+        return markdownProcessor.markdown(s);
     }
 
-    private void writeContentToFile(String convertedContent, File outputFile) {
+    private void writeContentToFile(String convertedContent, File outputDir, String[] outputFileName) {
         FileWriter fileWriter = null;
         try {
+            File outputFile = new File(outputDir, outputFileName[1]);
             fileWriter = new FileWriter(outputFile);
+            convertedContent = applyTemplate(convertedContent, outputFileName[0]);             
             fileWriter.write(convertedContent);
             fileWriter.close();
 
         } catch (IOException e) {
-            throwWriteException(outputFile, e);
+            throwWriteException(outputFileName[1], e);
         } finally {
             try {
                 if (fileWriter != null) {
                     fileWriter.close();
                 }
             } catch (IOException e) {
-                throwWriteException(outputFile, e);
+                throwWriteException(outputFileName[1], e);
             }
         }
     }
 
-    private void throwWriteException(File outputFile, IOException e) {
-        throw new BuildException("Error writing converted content to " + outputFile.getName() + ": " + e);
+    /**
+    *   Applies the template to the given content, if there was one set.
+    */
+    private String applyTemplate(String content, String fileName) {
+        if (template != null) {
+            String tmpl = readFile(new File(template));
+            content = tmpl.replace("${body}", content);
+            content = content.replace("${title}", fileName);
+        }
+        return content;
     }
 
-    private String getOutputFileName(File inputFile) {
+    private void throwWriteException(String outputFileName, IOException e) {
+        throw new BuildException("Error writing converted content to " + outputFileName + ": " + e);
+    }
+
+    private String[] getOutputFileName(File inputFile) {
         int idx = inputFile.getName().lastIndexOf(".");
-        return inputFile.getName().substring(0, idx + 1) + outputExtension; 
+        String prefix = inputFile.getName().substring(0, idx);
+        return new String[] { prefix, prefix  + "." + outputExtension }; 
     }
 
     private void checkOutputDir(File outputDir) {

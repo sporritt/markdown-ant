@@ -14,6 +14,7 @@ public final class MarkdownTask extends Task {
     private List filesets = new ArrayList();
     private String outputDir;
     private String outputExtension = "html";
+    private String template = null;
     private FileSetsManager fileSetsManager;
     private FileConverter fileConverter;
     private File outputDirFile;
@@ -21,7 +22,7 @@ public final class MarkdownTask extends Task {
     public void execute() throws BuildException {
         fileSetsManager = new FileSetsManager(getProject());
         outputDirFile = new File(outputDir);
-        fileConverter = new FileConverter(outputExtension);
+        fileConverter = new FileConverter(outputExtension, template);
         addFileSets();
         convertFiles();
     }
@@ -52,6 +53,10 @@ public final class MarkdownTask extends Task {
 
     public void setOutputExtension(String ext) {
         outputExtension = ext;
+    }
+
+    public void setTemplate(String template) {
+        this.template = template;
     }
 
     public String toString() {
